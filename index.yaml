@@ -1,0 +1,210 @@
+openapi: '3.0.0'
+info:
+  version: '1.0.0'
+  title: 'Order API'
+  description: API для сервиса заказов
+servers:
+  - url: http://localhost:8083
+    description: Example server
+paths:
+  /orders:
+    get:
+      summary: Получение списка заказов клиента
+      parameters:
+      - name: client_id
+        description: Уникальный идентификатор пользователя
+        in: query
+        required: true
+        schema:
+          type: integer
+      responses:
+        200:
+          description: Список заказов клиента
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/orders'
+        404:
+          description: Заказы не найдены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /order:
+    get:
+      summary: Чтение информации о заказе
+      parameters:
+      - name: id
+        description: Уникальный идентификатор заказа
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/order_id'
+      responses:
+        '200':
+          description: Найденный заказ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/order'
+        400:
+          description: Недостаточно параметров
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          description: Заказ не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Неожиданная ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: Добавление нового заказа
+      parameters:
+      - name: client_id
+        description: Идентефикатор заказчика
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: service_id
+        description: Идентефикатор услуги
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: status
+        description: Статус заказа 
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: content
+        description: Контент
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Идентификатор, добавленного заказа
+          content:
+            application/json:
+              schema:
+                type: integer
+        400:
+          description: Недостаточно параметров
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          description: Ошибка добавления заказа
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Неожиданная ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      summary: Изменение заказа
+      parameters:
+      - name: id
+        description: Уникальный идентификатор заказа
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/order_id'
+      - name: status
+        description: Статус заказа 
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: content
+        description: Контент
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Успешное изменение заказа
+        400:
+          description: Недостаточно параметров
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          description: Заказ не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Неожиданная ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    order_id:
+      description: Уникальный идентификатор заказа
+      type: integer
+    orders:
+      type: array
+      items:
+        $ref: '#/components/schemas/order'  
+    order:
+      type: object
+      required:
+        - id
+        - client_id
+        - service_id
+        - status
+        - date
+        - content
+      properties:
+        id:
+          $ref: '#/components/schemas/order_id'
+        client_id:
+          type: integer
+        service_id:
+          type: integer
+        status:
+          type: string
+        date:
+          type: string
+        content:
+          type: string
+    Error:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          description: Сообщение о ошибке
+          type: string
+  securitySchemes:
+      basicAuth:     
+        type: http
+        scheme: basic
