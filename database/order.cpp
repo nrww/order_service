@@ -63,7 +63,7 @@ namespace database
             Poco::Data::Statement update(session);
 
             update  << "UPDATE `order` "
-                    << "SET `status` = ?, `content` = ? "
+                    << "SET `status` = ?, `content` = ?"
                     << "WHERE `order_id` = ? ;",
                 use(_status),
                 use(_content),
@@ -265,7 +265,7 @@ namespace database
         }
         catch (Poco::Data::MySQL::StatementException &e)
         {
-            std::cout << "statement: " << e.what() << std::endl;
+            std::cout << "statement: " << e.displayText() << std::endl;
             throw;
         }
         return false;
