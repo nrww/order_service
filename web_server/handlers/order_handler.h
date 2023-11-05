@@ -197,22 +197,22 @@ public:
                 {
                     if (form.has("status") && form.has("client_id") && form.has("service_id"))
                     {
-                        database::Order service;
-                        service.status() = form.get("status");
+                        database::Order order;
+                        order.status() = form.get("status");
                         if(form.has("content"))
-                            service.content() = form.get("content");
+                            order.content() = form.get("content");
                         //add check foreign key
-                        service.client_id() = atol(form.get("client_id").c_str());
-                        service.service_id() = atol(form.get("service_id").c_str());
+                        order.client_id() = atol(form.get("client_id").c_str());
+                        order.service_id() = atol(form.get("service_id").c_str());
     
     
-                        if (service.save_to_mysql())
+                        if (order.save_to_mysql())
                         {                   
                             response.setStatus(Poco::Net::HTTPResponse::HTTP_OK);
                             response.setChunkedTransferEncoding(true);
                             response.setContentType("application/json");
                             Poco::JSON::Object::Ptr root = new Poco::JSON::Object();
-                            root->set("created", service.id());
+                            root->set("created", order.id());
                             std::ostream &ostr = response.send();
                             Poco::JSON::Stringifier::stringify(root, ostr);
 
@@ -220,7 +220,7 @@ public:
                         }
                         else
                         {
-                            notFoundError(response, request.getURI(), "Adding an order failed");
+                            notFoundError(response, request.getURI(), "Добавление заказа не удалось");
                             return;
                         }
                     }
@@ -236,15 +236,15 @@ public:
                     {
                         long id = atol(form.get("id").c_str());
                         
-                        std::optional<database::Order> service = database::Order::read_by_id(id);
-                        if(service)
+                        std::optional<database::Order> order = database::Order::read_by_id(id);
+                        if(order)
                         {
                             if(form.has("status"))
-                                service->status() = form.get("status");
+                                order->status() = form.get("status");
                             if(form.has("content"))
-                                service->content() = form.get("content");
+                                order->content() = form.get("content");
 
-                             service->update_in_mysql();
+                             order->update_in_mysql();
 
                             response.setStatus(Poco::Net::HTTPResponse::HTTP_OK);
                             response.setChunkedTransferEncoding(true);
