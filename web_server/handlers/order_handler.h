@@ -65,26 +65,8 @@ static bool hasSubstr(const std::string &str, const std::string &substr)
 
 class ServiceHandler : public HTTPRequestHandler
 {
-private:
-    bool check_name(const std::string &status, std::string &reason)
-    {
-        if (status.length() < 3)
-        {
-            reason = "Name must be at leas 3 signs";
-            return false;
-        }
-        return true;
-    };
 
-    bool check_price(const std::string &price, std::string &reason)
-    {     
-        if (stod(price) < 0)
-        {
-            reason = "Price must be non-negative";
-            return false;
-        }
-        return true;
-    };
+private:
 
     void badRequestError(HTTPServerResponse &response,  std::string instance)
     {
@@ -116,8 +98,8 @@ private:
         Poco::JSON::Stringifier::stringify(root, ostr);
     }
     
-
 public:
+
     ServiceHandler(const std::string &format) : _format(format)
     {
     }
@@ -129,6 +111,7 @@ public:
         try
         {
             response.set("Access-Control-Allow-Origin", "*"); //для работы swagger
+            
             if (hasSubstr(request.getURI(), "/orders"))
             {
                 if(form.has("client_id"))
@@ -161,14 +144,15 @@ public:
                     badRequestError(response, request.getURI());
                     return;
                 }
-            }         
+            }
             else if (hasSubstr(request.getURI(), "/order"))
             {
                 if(request.getMethod() == Poco::Net::HTTPRequest::HTTP_GET)
                 {
                     if(form.has("id"))
                     {
-                        long id = atol(form.get("id").c_str());
+                        std::string id_str = form.get("id");
+                        long id = atol(id_str.c_str());
                         std::optional<database::Order> result = database::Order::read_by_id(id);
                         if (result)
                         {               
@@ -182,7 +166,7 @@ public:
                         }
                         else
                         {
-                            notFoundError(response, request.getURI(), "Order id " + std::to_string(id) + " not found");
+                            notFoundError(response, request.getURI(), "Order id " + id_str + " not found");
                             return;
                         }
                     }
@@ -204,7 +188,6 @@ public:
                         //add check foreign key
                         order.client_id() = atol(form.get("client_id").c_str());
                         order.service_id() = atol(form.get("service_id").c_str());
-    
     
                         if (order.save_to_mysql())
                         {                   
@@ -244,17 +227,23 @@ public:
                             if(form.has("content"))
                                 order->content() = form.get("content");
 
-                             order->update_in_mysql();
+                            if(order->update_in_mysql())
+                            {
+                                response.setStatus(Poco::Net::HTTPResponse::HTTP_OK);
+                                response.setChunkedTransferEncoding(true);
+                                response.setContentType("application/json");
+                                Poco::JSON::Object::Ptr root = new Poco::JSON::Object();
+                                root->set("updated", id);
+                                std::ostream &ostr = response.send();
+                                Poco::JSON::Stringifier::stringify(root, ostr);
 
-                            response.setStatus(Poco::Net::HTTPResponse::HTTP_OK);
-                            response.setChunkedTransferEncoding(true);
-                            response.setContentType("application/json");
-                            Poco::JSON::Object::Ptr root = new Poco::JSON::Object();
-                            root->set("updated", id);
-                            std::ostream &ostr = response.send();
-                            Poco::JSON::Stringifier::stringify(root, ostr);
-
-                            return;
+                                return;
+                            }
+                            else
+                            {
+                                badRequestError(response, request.getURI());
+                                return;
+                            }                          
                         }
                         else
                         {
