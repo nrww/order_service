@@ -19,12 +19,10 @@ using Poco::Data::Statement;
 
 namespace database
 {
-
     void Order::init()
     {
         try
         {
-
             Poco::Data::Session session = database::Database::get().create_session();
             Statement create_stmt(session);
             create_stmt << "CREATE TABLE IF NOT EXISTS `order` ("
@@ -38,24 +36,19 @@ namespace database
                         << "FOREIGN KEY (`service_id`) REFERENCES `service` (`service_id`),"
                         << "FOREIGN KEY (`client_id`) REFERENCES `user` (`user_id`)"
                         << ");",
-                now;
-            
+                now;        
         }
-
         catch (Poco::Data::MySQL::ConnectionException &e)
         {
-            std::cout << "connection:" << e.what() << std::endl;
-            throw;
+            std::cout << "connection:" << e.displayText() << std::endl;
         }
         catch (Poco::Data::MySQL::StatementException &e)
         {
-
-            std::cout << "statement:" << e.what() << std::endl;
-            throw;
+            std::cout << "statement:" << e.displayText() << std::endl;
         }
     }
 
-    void Order::update_in_mysql()
+    bool Order::update_in_mysql()
     {
         try
         {
@@ -63,7 +56,7 @@ namespace database
             Poco::Data::Statement update(session);
 
             update  << "UPDATE `order` "
-                    << "SET `status` = ?, `content` = ?"
+                    << "SET `status` = ? , `content` = ? "
                     << "WHERE `order_id` = ? ;",
                 use(_status),
                 use(_content),
@@ -73,18 +66,17 @@ namespace database
             update.execute();
 
             std::cout << "updated: " << _id << std::endl;
+            return true;
         }
         catch (Poco::Data::MySQL::ConnectionException &e)
         {
-            std::cout << "connection:" << e.what() << std::endl;
-            throw;
+            std::cout << "connection:" << e.displayText() << std::endl;
         }
         catch (Poco::Data::MySQL::StatementException &e)
         {
-
-            std::cout << "statement:" << e.what() << std::endl;
-            throw;
+            std::cout << "statement:" << e.displayText() << std::endl;
         }
+        return false;
     }
 
     bool Order::delete_in_mysql(long id)
@@ -102,17 +94,13 @@ namespace database
             std::cout << "deleted: " << id << std::endl;
             return true;
         }
-
         catch (Poco::Data::MySQL::ConnectionException &e)
         {
-            std::cout << "connection:" << e.what() << std::endl;
-            throw;
+            std::cout << "connection:" << e.displayText() << std::endl;
         }
         catch (Poco::Data::MySQL::StatementException &e)
         {
-
-            std::cout << "statement:" << e.what() << std::endl;
-            throw;
+            std::cout << "statement:" << e.displayText() << std::endl;
         }
         return false;
     }
@@ -153,9 +141,9 @@ namespace database
     {
         try
         {
+            Order a;
             Poco::Data::Session session = database::Database::get().create_session();
             Statement select(session);
-            Order a;
             select  << "SELECT `order_id`, `status`, `content`, TO_CHAR(`date`, " << DATE_FORMAT << "), `service_id`, `client_id`"
                     << "FROM `order`" 
                     << "WHERE `order_id` = ? ;",
@@ -175,14 +163,11 @@ namespace database
 
         catch (Poco::Data::MySQL::ConnectionException &e)
         {
-            std::cout << "connection:" << e.what() << std::endl;
-            throw;
+            std::cout << "connection:" << e.displayText() << std::endl;
         }
         catch (Poco::Data::MySQL::StatementException &e)
         {
-
-            std::cout << "statement:" << e.what() << std::endl;
-            throw;
+            std::cout << "statement:" << e.displayText() << std::endl;
         }
         return {};
     }
@@ -190,7 +175,6 @@ namespace database
     std::vector<Order> Order::read_by_client_id(long client_id)
     {
         std::vector<Order> result;
-
         try
         {
             Poco::Data::Session session = database::Database::get().create_session();
@@ -213,30 +197,26 @@ namespace database
                 if (select.execute())
                     result.push_back(a);
             }
+            return result;
         }
-
         catch (Poco::Data::MySQL::ConnectionException &e)
         {
-            std::cout << "connection:" << e.what() << std::endl;
-            throw;
+            std::cout << "connection:" << e.displayText() << std::endl;        
         }
         catch (Poco::Data::MySQL::StatementException &e)
         {
-
             std::cout << "statement:" << e.displayText() << std::endl;
-            throw;
-        }
-        return result;
+        }   
+        return std::vector<Order>();
     }
 
     bool Order::save_to_mysql()
     {
-
         try
         {
             Poco::Data::Session session = database::Database::get().create_session();
             Poco::Data::Statement insert(session);
-
+            
             insert  << "INSERT INTO `order` (`status`, `content`, `date`, `service_id`, `client_id`)"
                     << "VALUES(?, ?, NOW(), ?, ?)",
                 use(_status),
@@ -260,13 +240,11 @@ namespace database
         }
         catch (Poco::Data::MySQL::ConnectionException &e)
         {
-            std::cout << "connection: " << e.what() << std::endl;
-            throw;
+            std::cout << e.displayText() << std::endl;
         }
         catch (Poco::Data::MySQL::StatementException &e)
         {
-            std::cout << "statement: " << e.displayText() << std::endl;
-            throw;
+            std::cout << e.displayText() << std::endl;
         }
         return false;
     }
@@ -301,7 +279,6 @@ namespace database
         return _client_id;
     }
 
-
     long &Order::id()
     {
         return _id;
@@ -329,6 +306,6 @@ namespace database
 
     long &Order::client_id()
     {
-        return _service_id;
+        return _client_id;
     }
 }

@@ -20,7 +20,7 @@ namespace database
 
         public:
 
-            static Order fromJSON(const std::string & str);
+            static Order fromJSON(const std::string &str);
 
             const long        &get_id() const;
             const std::string &get_status() const;
@@ -38,7 +38,7 @@ namespace database
             long        &client_id();
 
             static void init();
-            void update_in_mysql();
+            bool update_in_mysql();
             bool save_to_mysql();
             static bool delete_in_mysql(long id);
 
