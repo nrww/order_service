@@ -79,13 +79,13 @@ paths:
         in: query
         required: true
         schema:
-          type: string
+          type: integer
       - name: service_id
         description: Идентефикатор услуги
         in: query
         required: true
         schema:
-          type: string
+          type: integer
       - name: status
         description: Статус заказа 
         in: query
