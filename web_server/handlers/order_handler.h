@@ -181,6 +181,8 @@ public:
                 {
                     if (form.has("status") && form.has("client_id") && form.has("service_id"))
                     {
+                        std::string message = "";
+                        bool flag = true;
                         database::Order order;
                         order.status() = form.get("status");
                         if(form.has("content"))
@@ -188,14 +190,17 @@ public:
                         //add check foreign key
                         order.client_id() = atol(form.get("client_id").c_str());
                         order.service_id() = atol(form.get("service_id").c_str());
-    
-                        if (order.save_to_mysql())
+                        if(!(flag = order.is_user_exist()))
+                        {
+                            message += "Пользователь с таким id не существует!";
+                        }
+                        if (flag && order.save_to_mysql())
                         {                   
                             response.setStatus(Poco::Net::HTTPResponse::HTTP_OK);
                             response.setChunkedTransferEncoding(true);
                             response.setContentType("application/json");
                             Poco::JSON::Object::Ptr root = new Poco::JSON::Object();
-                            root->set("created", order.id());
+                            root->set("inserted_id", order.id());
                             std::ostream &ostr = response.send();
                             Poco::JSON::Stringifier::stringify(root, ostr);
 
@@ -203,7 +208,7 @@ public:
                         }
                         else
                         {
-                            notFoundError(response, request.getURI(), "Добавление заказа не удалось");
+                            notFoundError(response, request.getURI(), "Добавление заказа не удалось. " + message);
                             return;
                         }
                     }

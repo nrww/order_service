@@ -37,6 +37,7 @@ namespace database
             long        &service_id();
             long        &client_id();
 
+            bool is_user_exist();
             static void init();
             bool update_in_mysql();
             bool save_to_mysql();

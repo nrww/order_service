@@ -34,7 +34,7 @@ namespace database
                         << "`service_id` INT NOT NULL,"
                         << "PRIMARY KEY (`order_id`),"
                         << "FOREIGN KEY (`service_id`) REFERENCES `service` (`service_id`),"
-                        << "FOREIGN KEY (`client_id`) REFERENCES `user` (`user_id`)"
+                        << "KEY uid (`client_id`)"
                         << ");",
                 now;        
         }
@@ -46,6 +46,35 @@ namespace database
         {
             std::cout << "statement:" << e.displayText() << std::endl;
         }
+    }
+
+     bool Order::is_user_exist()
+    {
+        try
+        {
+            Poco::Data::Session session = database::Database::get().create_session();
+            auto hint = Database::sharding_user(_client_id);
+            Statement select(session);
+            int exist;
+            select  << "SELECT EXISTS(SELECT `user_id` FROM `user` WHERE `user_id` = ?)"
+                    << hint,
+                into(exist),
+                use(_client_id),
+                range(0, 1); //  iterate over result set one row at a time
+
+            select.execute();
+            if(exist) return true;           
+        }
+        catch (Poco::Data::MySQL::ConnectionException &e)
+        {
+            std::cout << e.displayText() << std::endl;
+        }
+        catch (Poco::Data::MySQL::StatementException &e)
+        {
+            std::cout << e.displayText() << std::endl;
+        }
+
+        return false;
     }
 
     bool Order::update_in_mysql()
