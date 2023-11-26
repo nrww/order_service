@@ -48,7 +48,7 @@ namespace database
         }
     }
 
-     bool Order::is_user_exist()
+    bool Order::is_user_exist()
     {
         try
         {

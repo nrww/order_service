@@ -181,7 +181,7 @@ public:
                 {
                     if (form.has("status") && form.has("client_id") && form.has("service_id"))
                     {
-                        std::string message = "";
+                        std::string error_msg = "Добавление заказа не удалось. ";
                         bool flag = true;
                         database::Order order;
                         order.status() = form.get("status");
@@ -192,7 +192,7 @@ public:
                         order.service_id() = atol(form.get("service_id").c_str());
                         if(!(flag = order.is_user_exist()))
                         {
-                            message += "Пользователь с таким id не существует!";
+                            error_msg += "Пользователь с таким id не существует!";
                         }
                         if (flag && order.save_to_mysql())
                         {                   
@@ -208,7 +208,7 @@ public:
                         }
                         else
                         {
-                            notFoundError(response, request.getURI(), "Добавление заказа не удалось. " + message);
+                            notFoundError(response, request.getURI(), error_msg);
                             return;
                         }
                     }
